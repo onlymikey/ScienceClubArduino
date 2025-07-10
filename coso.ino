@@ -1,10 +1,11 @@
 #include <Servo.h>
 #include <Wire.h> 
+#include <pt.h>
 
 // Declaracion de servomotores
 Servo servoX, servoY, servoUltrasonido,servoUltrasonido2;
 
-
+static struct pt pt1, pt2; 
 
 // Pines del joystick
 const int pinJoystickX = A2;
@@ -40,6 +41,8 @@ void setup() {
   // Configuracion de los servomotores
   servoX.attach(pinServoX);
   servoY.attach(pinServoY);
+  PT_INIT(&pt1);  // initialise the two
+  PT_INIT(&pt2);  // protothread variables
 
 
   //configuraciones de servo de ultrasonido
@@ -73,6 +76,31 @@ void loop() {
   RGBPines();
 }
 
+static int protothread1(struct pt *pt, int interval) {
+  static unsigned long timestamp = 0;
+  PT_BEGIN(pt);
+  while(1) { // never stop 
+    /* each time the function is called the second boolean
+    *  argument "millis() - timestamp > interval" is re-evaluated
+    *  and if false the function exits after that. */
+    PT_WAIT_UNTIL(pt, millis() - timestamp > interval );
+    timestamp = millis(); // take a new timestamp
+    RGBPines();
+  }
+  PT_END(pt);
+}
+/* exactly the same as the protothread1 function */
+static int protothread2(struct pt *pt, int interval) {
+  static unsigned long timestamp = 0;
+  PT_BEGIN(pt);
+  while(1) {
+    PT_WAIT_UNTIL(pt, millis() - timestamp > interval );
+    timestamp = millis();
+    RGBPines();
+  }
+  PT_END(pt);
+}
+
 // Funcion para mover los servos con el joystick
 void moverServosConJoystick() {
   int lecturaX = analogRead(pinJoystickX);
@@ -83,14 +111,14 @@ void moverServosConJoystick() {
   int objetivoY = map(lecturaY, 0, 1023, 0, 180);
 
   // Suavizar el movimiento
-  posicionX = posicionX + (objetivoX - posicionX) / 10;
-  posicionY = posicionY + (objetivoY - posicionY) / 10;
+  posicionX = posicionX + (objetivoX - posicionX) / 3;
+  posicionY = posicionY + (objetivoY - posicionY) / 3;
 
   // Mover los servos
   servoX.write(posicionX);
   servoY.write(posicionY);
 
-  delay(15); // Pequeno retraso para suavizar
+  delay(10); // Pequeno retraso para suavizar
 }
 
 // Funcion para activar un servo con el sensor ultrasonico
@@ -143,13 +171,12 @@ void hsvToRgb(float h, float s, float v, int &r, int &g, int &b) {
 
 
 void RGBPines() {
-  randomSeed(10);
-  float colorRand=random(0,1023);
+  delay(500);
+  int colorRand=random(0,1023);
   float hue = map(colorRand, 0, 1023, 0, 360); // Hue entre 0° y 360°
   int r, g, b;
   hsvToRgb(hue, 1.0, 1.0, r, g, b); // Saturación y brillo al 100%
   analogWrite(RED_PIN, r);
   analogWrite(GREEN_PIN, g);
   analogWrite(BLUE_PIN, b);
-  
   }
