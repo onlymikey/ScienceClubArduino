@@ -1,12 +1,11 @@
 #include <LiquidCrystal_I2C.h>
 
+
+
 //LCD pin to Arduino
 LiquidCrystal_I2C lcd(0x27,16,2);  //
 
-  lcd.init();
-  
-  //Encender la luz de fondo.
-  lcd.backlight();
+
 
 
 // constants won't change
@@ -130,11 +129,14 @@ void nota_(int nota, int duracion){
   delay(duracion);
 }
 
-void iniciarCancion() {
+void setup() {
   // initialize digital pin as an output.
   pinMode(RELAY_PIN, LOW);
 
-
+  lcd.init();
+ 
+  //Encender la luz de fondo.
+  lcd.backlight();
 
  lcd.begin(16, 2);
  lcd.setCursor(0,0);
@@ -145,7 +147,7 @@ void iniciarCancion() {
 }
 
 
-void cancionGata() {
+void loop() {
 
  textopan("La Gata Bajo la","Lluvia           ");
 
