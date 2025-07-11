@@ -10,6 +10,8 @@ static struct pt pt1, pt2;
 // Pines del joystick
 const int pinJoystickX = A2;
 const int pinJoystickY = A3;
+const int pinsw = 2;
+
 
 // Pines del LED RGB
 const int RED_PIN = 9;
@@ -26,21 +28,21 @@ const int distanciaUmbral = 10;
 
 // Pines de los servomotores (CAMBIAR)
 const int pinServoX = 6;
-const int pinServoY = 6;
+
 const int pinServoUltrasonido = 3;
 const int pinServoUltrasonido2 = 3;
 
 
 // Variables para suavizar el movimiento
-int posicionX = 90;
-int posicionY = 90;
+int posicionX = 180;
+
 
 
 
 void setup() {
   // Configuracion de los servomotores
   servoX.attach(pinServoX);
-  servoY.attach(pinServoY);
+
   PT_INIT(&pt1);  // initialise the two
   PT_INIT(&pt2);  // protothread variables
 
@@ -57,11 +59,12 @@ void setup() {
 
 
   // Posicion inicial de los servos
+    Serial.begin(9600);
   servoX.write(posicionX);
-  servoY.write(posicionY);
+
   servoUltrasonido.write(90); // Posicion inicial del tercer servo
   servoUltrasonido2.write(90);
-  Serial.begin(9600); 
+ 
   //Pines del Led
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
@@ -104,21 +107,25 @@ static int protothread2(struct pt *pt, int interval) {
 // Funcion para mover los servos con el joystick
 void moverServosConJoystick() {
   int lecturaX = analogRead(pinJoystickX);
-  int lecturaY = analogRead(pinJoystickY);
+
 
   // Mapear las lecturas del joystick a angulos de 0 a 180
-  int objetivoX = map(lecturaX, 0, 1023, 0, 180);
-  int objetivoY = map(lecturaY, 0, 1023, 0, 180);
+  int objetivoX = map(lecturaX, 0, 1023, 180, 60);
+  
 
-  // Suavizar el movimiento
-  posicionX = posicionX + (objetivoX - posicionX) / 3;
-  posicionY = posicionY + (objetivoY - posicionY) / 3;
+  //Suavizar el movimiento
+  //posicionX = posicionX + (objetivoX - posicionX) / 5;
+  
+  
 
   // Mover los servos
-  servoX.write(posicionX);
-  servoY.write(posicionY);
+  //servoX.write(posicionX);
 
-  delay(10); // Pequeno retraso para suavizar
+  
+   servoX.write(objetivoX);
+
+
+  delay(1); // Pequeno retraso para suavizar
 }
 
 // Funcion para activar un servo con el sensor ultrasonico
